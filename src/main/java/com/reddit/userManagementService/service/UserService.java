@@ -22,14 +22,19 @@ public class UserService {
     private final UserMapper userMapper;
     private final UserRepository userRepository;
     public RegisterUserDTO createUser( RegisterUserCommand registerUserCommand) {
+
+        if (userRepository.existsByEmailAndActiveTrue(registerUserCommand.email())) {
+            throw new RuntimeException("Email is already in use by an active account.");
+        }
         User user = userMapper.fromRegisterUserCommand(registerUserCommand);
         user.setRole("USER");
+        user.setActive(true);
         User savedUser = userRepository.save(user);
         return userMapper.toRegisterUserDTO(savedUser);
     }
 
     public LoginUserDTO login(LoginUserCommand loginUserCommand) {
-        User user = userRepository.findByEmail(loginUserCommand.email())
+        User user = userRepository.findByEmailAndActiveTrue(loginUserCommand.email())
                 .orElseThrow(() -> new RuntimeException("User not found"));
         if (!user.getPassword().equals(loginUserCommand.password())){
             throw new RuntimeException("Invalid credentials");
@@ -39,13 +44,13 @@ public class UserService {
     }
 
     public RegisterUserDTO getUserByID(Long id) {
-        User user = userRepository.findById(id)
+        User user = userRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
         return userMapper.toRegisterUserDTO(user);
     }
 
     public RegisterUserDTO patchUser(PatchUserCommand patchUserCommand) {
-        User user = userRepository.findById(patchUserCommand.id()).
+        User user = userRepository.findByIdAndActiveTrue(patchUserCommand.id()).
                 orElseThrow(()-> new EntityNotFoundException("User not found"));
         if (patchUserCommand.username()!=null){
 user.setUsername(String.valueOf(patchUserCommand.username()));
@@ -62,10 +67,11 @@ user.setUsername(String.valueOf(patchUserCommand.username()));
     }
 
     public RegisterUserDTO deleteUser(Long id) {
-        User user = userRepository.findById(id)
+        User user = userRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(()-> new EntityNotFoundException("User not found"));
         RegisterUserDTO registerUserDTO = userMapper.toRegisterUserDTO(user);
-        userRepository.delete(user);
+        user.setActive(false);
+        userRepository.save(user);
         return registerUserDTO;
     }
 }

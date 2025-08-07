@@ -3,19 +3,16 @@ package com.reddit.userManagementService.service;
 import com.reddit.userManagementService.mapper.FollowMapper;
 import com.reddit.userManagementService.mapper.UserMapper;
 import com.reddit.userManagementService.model.Follower;
-import com.reddit.userManagementService.model.FollowerId;
 import com.reddit.userManagementService.model.User;
 import com.reddit.userManagementService.repository.FollowRepository;
 import com.reddit.userManagementService.repository.UserRepository;
 import com.reddit.userManagementService.service.dto.response.FollowDTO;
-import com.reddit.userManagementService.service.dto.response.RegisterUserDTO;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -36,18 +33,14 @@ public class FollowService {
         User followed = userRepository.findById(followedId)
                 .orElseThrow(() -> new EntityNotFoundException("Followed user not found"));
 
-        FollowerId relationId = new FollowerId(followerId, followedId);
-        boolean alreadyFollowing = followerRepository.existsById(relationId);
-        if (alreadyFollowing) {
+        boolean alreadyFollowing = followerRepository.existsByFollowerAndFollowedAndActiveTrue(follower,followed);
+        if (alreadyFollowing){
             throw new RuntimeException("Already following this user.");
         }
-
-        // Save with composite key
         Follower relation = new Follower();
-        relation.setId(relationId);
         relation.setFollower(follower);
         relation.setFollowed(followed);
-        relation.setFollowedAt(LocalDateTime.now());
+        relation.setActive(true);
         followerRepository.save(relation);
 
         FollowDTO followDTO = followMapper.fromUser(followed);
@@ -66,24 +59,22 @@ public class FollowService {
         User followed = userRepository.findById(followedId)
                 .orElseThrow(() -> new EntityNotFoundException("Followed user not found"));
 
-        FollowerId relationId = new FollowerId(followerId, followedId);
 
         Follower followerRecord = followerRepository
-                .findById(relationId).orElseThrow(() -> new RuntimeException("Already unfollowed this user !"));
+                .findByFollowerIdAndFollowedIdAndActiveTrue(followerId, followedId).orElseThrow(() -> new RuntimeException("Already unfollowed this user !"));
         FollowDTO followDTO = followMapper.fromUser(followed);
-
-        followerRepository.delete(followerRecord);
+        followerRecord.setActive(false);
+        followerRepository.save(followerRecord);
         return followDTO;
 
     }
-
 
 
     public List<FollowDTO> getFollowers(Long id) {
         User followedUser = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found!"));
 
-        List<Follower> followers = followerRepository.findByFollowed(followedUser);
+        List<Follower> followers = followerRepository.findByFollowedAndActiveTrue(followedUser);
 
         return followers.stream()
                 .map(f -> followMapper.fromUser(f.getFollower()))
@@ -94,7 +85,7 @@ public class FollowService {
         User followerUser = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found!"));
 
-        List<Follower> following = followerRepository.findByFollower(followerUser);
+        List<Follower> following = followerRepository.findByFollowerAndActiveTrue(followerUser);
 
         return following.stream()
                 .map(f -> followMapper.fromUser(f.getFollowed()))
