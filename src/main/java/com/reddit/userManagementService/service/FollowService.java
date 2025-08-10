@@ -9,6 +9,8 @@ import com.reddit.userManagementService.repository.UserRepository;
 import com.reddit.userManagementService.service.dto.response.FollowDTO;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -70,25 +72,23 @@ public class FollowService {
     }
 
 
-    public List<FollowDTO> getFollowers(Long id) {
+    public Page<FollowDTO> getFollowers(Long id, Pageable pageable) {
         User followedUser = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found!"));
 
-        List<Follower> followers = followerRepository.findByFollowedAndActiveTrue(followedUser);
+        Page<Follower> page = followerRepository.findByFollowedAndActiveTrue(followedUser, pageable);
 
-        return followers.stream()
-                .map(f -> followMapper.fromUser(f.getFollower()))
-                .toList();
+        return page
+                .map(f -> followMapper.fromUser(f.getFollower()));
     }
 
-    public List<FollowDTO> getFollowing(Long id) {
+    public Page<FollowDTO> getFollowing(Long id, Pageable pageable) {
         User followerUser = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found!"));
 
-        List<Follower> following = followerRepository.findByFollowerAndActiveTrue(followerUser);
+        Page<Follower> page = followerRepository.findByFollowerAndActiveTrue(followerUser, pageable);
 
-        return following.stream()
-                .map(f -> followMapper.fromUser(f.getFollowed()))
-                .toList();
+        return page
+                .map(f -> followMapper.fromUser(f.getFollowed()));
     }
 }

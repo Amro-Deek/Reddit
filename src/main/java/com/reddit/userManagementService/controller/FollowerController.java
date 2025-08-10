@@ -9,6 +9,10 @@ import com.reddit.userManagementService.service.FollowService;
 import com.reddit.userManagementService.service.dto.response.FollowDTO;
 import com.reddit.userManagementService.service.dto.response.RegisterUserDTO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,19 +41,39 @@ public class FollowerController {
     }
 
     @GetMapping("{id}/followers")
-    public ResponseEntity<List<FollowResponse>> getFollowers(@PathVariable Long id){
-        List<FollowDTO> followDTOS = followService.getFollowers(id);
+    public ResponseEntity<Page<FollowResponse>> getFollowers(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id,desc") String sort) {
 
-        return ResponseEntity.ok(followDTOS.stream()
-                .map(f ->followMapper.fromFollowDTO(f)).toList());
+        Sort sortObj = parseSort(sort);
+        Pageable pageable = PageRequest.of(page, size, sortObj);
+
+        Page<FollowDTO> dtoPage = followService.getFollowers(id, pageable);
+        return ResponseEntity.ok(dtoPage.map(followMapper::fromFollowDTO));
     }
 
     @GetMapping("{id}/following")
-    public ResponseEntity<List<FollowResponse>> getFollowing(@PathVariable Long id){
-        List<FollowDTO> followDTOS = followService.getFollowing(id);
+    public ResponseEntity<Page<FollowResponse>> getFollowing(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id,desc") String sort) {
 
-        return ResponseEntity.ok(followDTOS.stream()
-                .map(f ->followMapper.fromFollowDTO(f)).toList());
+        Sort sortObj = parseSort(sort);
+        Pageable pageable = PageRequest.of(page, size, sortObj);
+
+        Page<FollowDTO> dtoPage = followService.getFollowing(id, pageable);
+        return ResponseEntity.ok(dtoPage.map(followMapper::fromFollowDTO));
+    }
+
+    private Sort parseSort(String sort) {
+        String[] parts = sort.split(",");
+        if (parts.length == 2) {
+            return Sort.by(Sort.Direction.fromString(parts[1]), parts[0]);
+        }
+        return Sort.by(parts[0]).descending();
     }
 
 }
