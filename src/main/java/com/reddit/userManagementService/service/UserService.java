@@ -8,11 +8,14 @@ import com.reddit.userManagementService.repository.UserRepository;
 import com.reddit.userManagementService.service.dto.request.LoginUserCommand;
 import com.reddit.userManagementService.service.dto.request.PatchUserCommand;
 import com.reddit.userManagementService.service.dto.request.RegisterUserCommand;
+import com.reddit.userManagementService.service.dto.response.AllUsersDTO;
 import com.reddit.userManagementService.service.dto.response.LoginUserDTO;
 import com.reddit.userManagementService.service.dto.response.RegisterUserDTO;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
@@ -73,5 +76,10 @@ user.setUsername(String.valueOf(patchUserCommand.username()));
         user.setActive(false);
         userRepository.save(user);
         return registerUserDTO;
+    }
+
+    public Page<AllUsersDTO> getUsers(Pageable pageable) {
+        Page<User> users = userRepository.findByActiveTrue(pageable);
+        return users.map(userMapper::toAllUsersDTO);
     }
 }

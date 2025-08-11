@@ -29,10 +29,10 @@ public class FollowService {
         if (followerId.equals(followedId)){
             throw new IllegalArgumentException("You can not follow yourself !");
         }
-        User follower = userRepository.findById(followerId)
+        User follower = userRepository.findByIdAndActiveTrue(followerId)
                 .orElseThrow(()-> new EntityNotFoundException("Follower not found"));
 
-        User followed = userRepository.findById(followedId)
+        User followed = userRepository.findByIdAndActiveTrue(followedId)
                 .orElseThrow(() -> new EntityNotFoundException("Followed user not found"));
 
         boolean alreadyFollowing = followerRepository.existsByFollowerAndFollowedAndActiveTrue(follower,followed);
@@ -55,10 +55,10 @@ public class FollowService {
         if (followerId.equals(followedId)){
             throw new IllegalArgumentException("You can not unfollow yourself !");
         }
-        User follower = userRepository.findById(followerId)
+        User follower = userRepository.findByIdAndActiveTrue(followerId)
                 .orElseThrow(()-> new EntityNotFoundException("Follower not found"));
 
-        User followed = userRepository.findById(followedId)
+        User followed = userRepository.findByIdAndActiveTrue(followedId)
                 .orElseThrow(() -> new EntityNotFoundException("Followed user not found"));
 
 
@@ -73,7 +73,7 @@ public class FollowService {
 
 
     public Page<FollowDTO> getFollowers(Long id, Pageable pageable) {
-        User followedUser = userRepository.findById(id)
+        User followedUser = userRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new RuntimeException("User not found!"));
 
         Page<Follower> page = followerRepository.findByFollowedAndActiveTrue(followedUser, pageable);
@@ -83,7 +83,7 @@ public class FollowService {
     }
 
     public Page<FollowDTO> getFollowing(Long id, Pageable pageable) {
-        User followerUser = userRepository.findById(id)
+        User followerUser = userRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new RuntimeException("User not found!"));
 
         Page<Follower> page = followerRepository.findByFollowerAndActiveTrue(followerUser, pageable);

@@ -2,6 +2,7 @@ package com.reddit.userManagementService.controller;
 
 
 import com.reddit.userManagementService.controller.dto.response.FollowResponse;
+import com.reddit.userManagementService.controller.dto.response.PageResponse;
 import com.reddit.userManagementService.controller.dto.response.RegisterUserResponse;
 import com.reddit.userManagementService.mapper.FollowMapper;
 import com.reddit.userManagementService.mapper.UserMapper;
@@ -41,21 +42,27 @@ public class FollowerController {
     }
 
     @GetMapping("{id}/followers")
-    public ResponseEntity<Page<FollowResponse>> getFollowers(
+    public ResponseEntity<PageResponse<FollowResponse>> getFollowers(
             @PathVariable Long id,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id,desc") String sort) {
 
         Sort sortObj = parseSort(sort);
+
         Pageable pageable = PageRequest.of(page, size, sortObj);
 
         Page<FollowDTO> dtoPage = followService.getFollowers(id, pageable);
-        return ResponseEntity.ok(dtoPage.map(followMapper::fromFollowDTO));
+
+        Page<FollowResponse> followResponsePage = dtoPage.map(followMapper::fromFollowDTO);
+
+        PageResponse<FollowResponse> pageResponse = PageResponse.from(followResponsePage);
+
+        return ResponseEntity.ok(pageResponse);
     }
 
     @GetMapping("{id}/following")
-    public ResponseEntity<Page<FollowResponse>> getFollowing(
+    public ResponseEntity<PageResponse<FollowResponse>> getFollowing(
             @PathVariable Long id,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -64,8 +71,16 @@ public class FollowerController {
         Sort sortObj = parseSort(sort);
         Pageable pageable = PageRequest.of(page, size, sortObj);
 
+
+
         Page<FollowDTO> dtoPage = followService.getFollowing(id, pageable);
-        return ResponseEntity.ok(dtoPage.map(followMapper::fromFollowDTO));
+
+        Page<FollowResponse> followResponsePage = dtoPage.map(followMapper::fromFollowDTO);
+
+        PageResponse<FollowResponse> pageResponse = PageResponse.from(followResponsePage);
+
+        return ResponseEntity.ok(pageResponse);
+
     }
 
     private Sort parseSort(String sort) {

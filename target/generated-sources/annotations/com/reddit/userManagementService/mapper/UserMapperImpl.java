@@ -3,12 +3,14 @@ package com.reddit.userManagementService.mapper;
 import com.reddit.userManagementService.controller.dto.request.LoginUserRequest;
 import com.reddit.userManagementService.controller.dto.request.PatchUserRequest;
 import com.reddit.userManagementService.controller.dto.request.RegisterUserRequest;
+import com.reddit.userManagementService.controller.dto.response.AllUsersResponse;
 import com.reddit.userManagementService.controller.dto.response.LoginUserResponse;
 import com.reddit.userManagementService.controller.dto.response.RegisterUserResponse;
 import com.reddit.userManagementService.model.User;
 import com.reddit.userManagementService.service.dto.request.LoginUserCommand;
 import com.reddit.userManagementService.service.dto.request.PatchUserCommand;
 import com.reddit.userManagementService.service.dto.request.RegisterUserCommand;
+import com.reddit.userManagementService.service.dto.response.AllUsersDTO;
 import com.reddit.userManagementService.service.dto.response.LoginUserDTO;
 import com.reddit.userManagementService.service.dto.response.RegisterUserDTO;
 import javax.annotation.processing.Generated;
@@ -16,7 +18,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2025-08-08T02:00:25+1400",
+    date = "2025-08-11T23:54:15+1400",
     comments = "version: 1.5.5.Final, compiler: javac, environment: Java 24.0.1 (Oracle Corporation)"
 )
 @Component
@@ -191,5 +193,47 @@ public class UserMapperImpl implements UserMapper {
         PatchUserCommand patchUserCommand = new PatchUserCommand( id1, username, email, password );
 
         return patchUserCommand;
+    }
+
+    @Override
+    public AllUsersResponse toAllUsersResponse(AllUsersDTO allUsersDTO) {
+        if ( allUsersDTO == null ) {
+            return null;
+        }
+
+        Long id = null;
+        String username = null;
+        String email = null;
+        String role = null;
+
+        id = allUsersDTO.id();
+        username = allUsersDTO.username();
+        email = allUsersDTO.email();
+        role = allUsersDTO.role();
+
+        AllUsersResponse allUsersResponse = new AllUsersResponse( id, username, email, role );
+
+        return allUsersResponse;
+    }
+
+    @Override
+    public AllUsersDTO toAllUsersDTO(User user) {
+        if ( user == null ) {
+            return null;
+        }
+
+        Long id = null;
+        String username = null;
+        String email = null;
+        String role = null;
+
+        id = user.getId();
+        username = user.getUsername();
+        email = user.getEmail();
+        role = user.getRole();
+
+        AllUsersDTO allUsersDTO = new AllUsersDTO( id, username, email, role );
+
+        return allUsersDTO;
     }
 }
