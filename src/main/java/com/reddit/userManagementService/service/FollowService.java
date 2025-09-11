@@ -8,6 +8,7 @@ import com.reddit.userManagementService.repository.FollowRepository;
 import com.reddit.userManagementService.repository.UserRepository;
 import com.reddit.userManagementService.service.dto.response.FollowDTO;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,7 +25,7 @@ public class FollowService {
     private final UserMapper userMapper;
     private final FollowMapper followMapper;
 
-
+@Transactional
     public FollowDTO follow(Long followerId, Long followedId) {
         if (followerId.equals(followedId)){
             throw new IllegalArgumentException("You can not follow yourself !");

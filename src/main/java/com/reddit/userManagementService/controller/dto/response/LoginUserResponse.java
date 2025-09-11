@@ -1,7 +1,5 @@
 package com.reddit.userManagementService.controller.dto.response;
 
-public record LoginUserResponse( Long id,
-         String username,
-         String email,
-         String role) {
+public record LoginUserResponse( String token,
+                                 long expiresIn) {
 }

@@ -2,6 +2,7 @@ package com.reddit.userManagementService.service;
 
 
 import com.reddit.userManagementService.controller.dto.response.RegisterUserResponse;
+import com.reddit.userManagementService.controller.dto.response.UserResponse;
 import com.reddit.userManagementService.mapper.UserMapper;
 import com.reddit.userManagementService.model.User;
 import com.reddit.userManagementService.repository.UserRepository;
@@ -18,6 +19,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 @Service
 public class UserService {
@@ -30,7 +33,6 @@ public class UserService {
             throw new RuntimeException("Email is already in use by an active account.");
         }
         User user = userMapper.fromRegisterUserCommand(registerUserCommand);
-        user.setRole("USER");
         user.setActive(true);
         User savedUser = userRepository.save(user);
         return userMapper.toRegisterUserDTO(savedUser);
@@ -42,7 +44,20 @@ public class UserService {
         if (!user.getPassword().equals(loginUserCommand.password())){
             throw new RuntimeException("Invalid credentials");
         }
+        user.setLoggedIn(true);
+        userRepository.save(user);
         return userMapper.toLoginUserDTO(user);
+
+    }
+
+    public void logout(Long id) {
+        User user = userRepository.findByIdAndActiveTrue(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        if(!user.isLoggedIn()){
+            throw new RuntimeException("user already logged out");
+        }
+        user.setLoggedIn(false);
+        userRepository.save(user);
 
     }
 
@@ -50,6 +65,12 @@ public class UserService {
         User user = userRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
         return userMapper.toRegisterUserDTO(user);
+    }
+
+    public UserResponse getUserById(Long userId) {
+        User user = userRepository.findByIdAndActiveTrue(userId)
+                .orElseThrow(() ->  new RuntimeException("User with id " + userId + " not found"));
+        return userMapper.toResponse(user);
     }
 
     public RegisterUserDTO patchUser(PatchUserCommand patchUserCommand) {
@@ -81,5 +102,12 @@ user.setUsername(String.valueOf(patchUserCommand.username()));
     public Page<AllUsersDTO> getUsers(Pageable pageable) {
         Page<User> users = userRepository.findByActiveTrue(pageable);
         return users.map(userMapper::toAllUsersDTO);
+    }
+
+    public List<UserResponse> getUsersByIds(List<Long> userIds) {
+        List<User> users = userRepository.findAllById(userIds);
+        return users.stream()
+                .map(userMapper::toResponse)
+                .toList();
     }
 }

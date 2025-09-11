@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2025-08-11T21:39:50+1400",
+    date = "2025-09-06T23:24:47+1400",
     comments = "version: 1.5.5.Final, compiler: javac, environment: Java 24.0.1 (Oracle Corporation)"
 )
 @Component
@@ -22,9 +22,6 @@ public class FollowMapperImpl implements FollowMapper {
 
         Long id = null;
         String username = null;
-
-        id = user.getId();
-        username = user.getUsername();
 
         FollowDTO followDTO = new FollowDTO( id, username );
 

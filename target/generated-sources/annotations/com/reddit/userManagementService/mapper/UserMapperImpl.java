@@ -3,22 +3,31 @@ package com.reddit.userManagementService.mapper;
 import com.reddit.userManagementService.controller.dto.request.LoginUserRequest;
 import com.reddit.userManagementService.controller.dto.request.PatchUserRequest;
 import com.reddit.userManagementService.controller.dto.request.RegisterUserRequest;
+import com.reddit.userManagementService.controller.dto.request.VerifyUserRequest;
 import com.reddit.userManagementService.controller.dto.response.AllUsersResponse;
+import com.reddit.userManagementService.controller.dto.response.CustomUserDetailsResponse;
 import com.reddit.userManagementService.controller.dto.response.LoginUserResponse;
 import com.reddit.userManagementService.controller.dto.response.RegisterUserResponse;
+import com.reddit.userManagementService.controller.dto.response.UserResponse;
+import com.reddit.userManagementService.model.CommunityPermission;
 import com.reddit.userManagementService.model.User;
 import com.reddit.userManagementService.service.dto.request.LoginUserCommand;
 import com.reddit.userManagementService.service.dto.request.PatchUserCommand;
 import com.reddit.userManagementService.service.dto.request.RegisterUserCommand;
+import com.reddit.userManagementService.service.dto.request.VerifyUserCommand;
 import com.reddit.userManagementService.service.dto.response.AllUsersDTO;
 import com.reddit.userManagementService.service.dto.response.LoginUserDTO;
 import com.reddit.userManagementService.service.dto.response.RegisterUserDTO;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import javax.annotation.processing.Generated;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2025-08-11T23:54:15+1400",
+    date = "2025-09-12T03:07:01+1400",
     comments = "version: 1.5.5.Final, compiler: javac, environment: Java 24.0.1 (Oracle Corporation)"
 )
 @Component
@@ -67,14 +76,16 @@ public class UserMapperImpl implements UserMapper {
         Long id = null;
         String username = null;
         String email = null;
-        String role = null;
+        boolean loggedIn = false;
 
         id = user.getId();
         username = user.getUsername();
         email = user.getEmail();
-        role = user.getRole();
+        loggedIn = user.isLoggedIn();
 
-        RegisterUserDTO registerUserDTO = new RegisterUserDTO( id, username, email, role );
+        String role = null;
+
+        RegisterUserDTO registerUserDTO = new RegisterUserDTO( id, username, email, role, loggedIn );
 
         return registerUserDTO;
     }
@@ -88,14 +99,14 @@ public class UserMapperImpl implements UserMapper {
         Long id = null;
         String username = null;
         String email = null;
-        String role = null;
+        boolean loggedIn = false;
 
         id = registerUserDTO.id();
         username = registerUserDTO.username();
         email = registerUserDTO.email();
-        role = registerUserDTO.role();
+        loggedIn = registerUserDTO.loggedIn();
 
-        RegisterUserResponse registerUserResponse = new RegisterUserResponse( id, username, email, role );
+        RegisterUserResponse registerUserResponse = new RegisterUserResponse( id, username, email, loggedIn );
 
         return registerUserResponse;
     }
@@ -140,14 +151,16 @@ public class UserMapperImpl implements UserMapper {
         Long id = null;
         String username = null;
         String email = null;
-        String role = null;
+        boolean loggedIn = false;
 
         id = user.getId();
         username = user.getUsername();
         email = user.getEmail();
-        role = user.getRole();
+        loggedIn = user.isLoggedIn();
 
-        LoginUserDTO loginUserDTO = new LoginUserDTO( id, username, email, role );
+        String role = null;
+
+        LoginUserDTO loginUserDTO = new LoginUserDTO( id, username, email, role, loggedIn );
 
         return loginUserDTO;
     }
@@ -158,17 +171,10 @@ public class UserMapperImpl implements UserMapper {
             return null;
         }
 
-        Long id = null;
-        String username = null;
-        String email = null;
-        String role = null;
+        String token = null;
+        long expiresIn = 0L;
 
-        id = loginUserDTO.id();
-        username = loginUserDTO.username();
-        email = loginUserDTO.email();
-        role = loginUserDTO.role();
-
-        LoginUserResponse loginUserResponse = new LoginUserResponse( id, username, email, role );
+        LoginUserResponse loginUserResponse = new LoginUserResponse( token, expiresIn );
 
         return loginUserResponse;
     }
@@ -225,15 +231,69 @@ public class UserMapperImpl implements UserMapper {
         Long id = null;
         String username = null;
         String email = null;
-        String role = null;
 
         id = user.getId();
         username = user.getUsername();
         email = user.getEmail();
-        role = user.getRole();
+
+        String role = null;
 
         AllUsersDTO allUsersDTO = new AllUsersDTO( id, username, email, role );
 
         return allUsersDTO;
+    }
+
+    @Override
+    public CustomUserDetailsResponse toCustomUserDetailsResponse(User user, Map<Long, List<CommunityPermission>> privilegesPerCommunity) {
+        if ( user == null && privilegesPerCommunity == null ) {
+            return null;
+        }
+
+        User user1 = null;
+        user1 = user;
+
+        Collection<? extends GrantedAuthority> authorities = mapAuthorities(user, privilegesPerCommunity);
+
+        CustomUserDetailsResponse customUserDetailsResponse = new CustomUserDetailsResponse( user1, authorities );
+
+        return customUserDetailsResponse;
+    }
+
+    @Override
+    public VerifyUserCommand toVerifyUserCommand(VerifyUserRequest verifyUserRequest) {
+        if ( verifyUserRequest == null ) {
+            return null;
+        }
+
+        String email = null;
+        String verificationCode = null;
+
+        email = verifyUserRequest.email();
+        verificationCode = verifyUserRequest.verificationCode();
+
+        VerifyUserCommand verifyUserCommand = new VerifyUserCommand( email, verificationCode );
+
+        return verifyUserCommand;
+    }
+
+    @Override
+    public UserResponse toResponse(User user) {
+        if ( user == null ) {
+            return null;
+        }
+
+        long id = 0L;
+        String username = null;
+        String email = null;
+
+        if ( user.getId() != null ) {
+            id = user.getId();
+        }
+        username = user.getUsername();
+        email = user.getEmail();
+
+        UserResponse userResponse = new UserResponse( id, username, email );
+
+        return userResponse;
     }
 }

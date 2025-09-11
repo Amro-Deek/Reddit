@@ -1,4 +1,8 @@
 package com.reddit.userManagementService.controller.dto.request;
 
-public record RegisterUserRequest(String username, String email, String password) {
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+
+public record RegisterUserRequest(
+        @Valid String username, String email, String password) {
 }

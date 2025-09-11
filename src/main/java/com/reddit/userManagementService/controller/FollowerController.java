@@ -1,9 +1,7 @@
 package com.reddit.userManagementService.controller;
 
 
-import com.reddit.userManagementService.controller.dto.response.FollowResponse;
-import com.reddit.userManagementService.controller.dto.response.PageResponse;
-import com.reddit.userManagementService.controller.dto.response.RegisterUserResponse;
+import com.reddit.userManagementService.controller.dto.response.*;
 import com.reddit.userManagementService.mapper.FollowMapper;
 import com.reddit.userManagementService.mapper.UserMapper;
 import com.reddit.userManagementService.service.FollowService;
@@ -14,21 +12,39 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/follow")
+@RequestMapping("/api/followers")
 @RequiredArgsConstructor
 public class FollowerController {
     private final FollowService followService;
     private final UserMapper userMapper;
     private final FollowMapper followMapper;
 
-    @PostMapping("/{followerId}/follow/{followedId}")
-    public ResponseEntity<FollowResponse> follow(@PathVariable Long followerId , @PathVariable Long followedId){
+//    @PostMapping("/{followerId}/follow/{followedId}")
+//    public ResponseEntity<FollowResponse> follow(@PathVariable Long followerId , @PathVariable Long followedId){
+//        FollowDTO followDTO = followService.follow(followerId,followedId);
+//        FollowResponse followResponse = followMapper.fromFollowDTO(followDTO);
+//        return ResponseEntity.ok(followResponse);
+//    }
+
+ //   @PreAuthorize("hasAuthority('13:MANAGE_MEMBERS')")
+    @PostMapping("/follow/{followedId}")
+    public ResponseEntity<FollowResponse> follow(@PathVariable Long followedId
+            , @AuthenticationPrincipal CustomUserDetailsResponse principal){
+        // Extract followerId from principal
+        Long followerId = principal.getId();
+        System.out.println("Authorities: " + principal.getAuthorities());
+
+
         FollowDTO followDTO = followService.follow(followerId,followedId);
         FollowResponse followResponse = followMapper.fromFollowDTO(followDTO);
         return ResponseEntity.ok(followResponse);
@@ -42,44 +58,31 @@ public class FollowerController {
     }
 
     @GetMapping("{id}/followers")
-    public ResponseEntity<PageResponse<FollowResponse>> getFollowers(
+    public ResponseEntity<PaginatedResponse<FollowResponse>> getFollowers(
             @PathVariable Long id,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "id,desc") String sort) {
-
-        Sort sortObj = parseSort(sort);
-
-        Pageable pageable = PageRequest.of(page, size, sortObj);
+            @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC)
+            Pageable pageable) {
 
         Page<FollowDTO> dtoPage = followService.getFollowers(id, pageable);
 
-        Page<FollowResponse> followResponsePage = dtoPage.map(followMapper::fromFollowDTO);
+        PaginatedResponse<FollowResponse> body =
+                PaginatedResponse.of(dtoPage, followMapper::fromFollowDTO);
 
-        PageResponse<FollowResponse> pageResponse = PageResponse.from(followResponsePage);
-
-        return ResponseEntity.ok(pageResponse);
+        return ResponseEntity.ok(body);
     }
 
     @GetMapping("{id}/following")
-    public ResponseEntity<PageResponse<FollowResponse>> getFollowing(
+    public ResponseEntity<PaginatedResponse<FollowResponse>> getFollowing(
             @PathVariable Long id,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "id,desc") String sort) {
-
-        Sort sortObj = parseSort(sort);
-        Pageable pageable = PageRequest.of(page, size, sortObj);
-
-
+            @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC)
+            Pageable pageable) {
 
         Page<FollowDTO> dtoPage = followService.getFollowing(id, pageable);
 
-        Page<FollowResponse> followResponsePage = dtoPage.map(followMapper::fromFollowDTO);
+        PaginatedResponse<FollowResponse> body =
+                PaginatedResponse.of(dtoPage, followMapper::fromFollowDTO);
 
-        PageResponse<FollowResponse> pageResponse = PageResponse.from(followResponsePage);
-
-        return ResponseEntity.ok(pageResponse);
+        return ResponseEntity.ok(body);
 
     }
 

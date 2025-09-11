@@ -1,4 +1,4 @@
 package com.reddit.userManagementService.controller.dto.response;
 
-public record RegisterUserResponse(Long id, String username, String email, String role) {
+public record RegisterUserResponse(Long id, String username, String email, boolean loggedIn) {
 }
