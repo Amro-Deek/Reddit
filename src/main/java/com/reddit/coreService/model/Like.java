@@ -1,0 +1,36 @@
+package com.reddit.coreService.model;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "likes")
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
+public class Like {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private Long userId;
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "post_id", nullable = false)
+    private Post post;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime likedAt= LocalDateTime.now();
+
+    private LocalDateTime unlikedAt;
+
+    private boolean deleted = false ;
+
+}
